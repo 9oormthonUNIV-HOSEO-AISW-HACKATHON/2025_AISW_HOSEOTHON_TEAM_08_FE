@@ -110,12 +110,13 @@ export default function CreateRoomScreen() {
                   ]}
                   onPress={() => setSelectedIcon(icon.id)}
                 >
-                  <Icon
-                    name={icon.iconName}
-                    size={48}
-                    color={selectedIcon === icon.id ? icon.color : Colors.textLight}
-                    style={styles.iconImage}
-                  />
+                  <View style={styles.iconContainer}>
+                    <Icon
+                      name={icon.iconName}
+                      size={48}
+                      color={selectedIcon === icon.id ? icon.color : Colors.textLight}
+                    />
+                  </View>
                   <Text
                     style={[
                       styles.iconName,
@@ -211,14 +212,18 @@ const styles = StyleSheet.create({
     backgroundColor: Colors.backgroundLight,
     justifyContent: 'center',
     alignItems: 'center',
-    padding: 16,
+    padding: 8,
   },
   iconOptionSelected: {
     borderColor: Colors.primary,
     backgroundColor: Colors.primaryLight,
   },
-  iconImage: {
-    marginBottom: 8,
+  iconContainer: {
+    flex: 1,
+    justifyContent: 'center',
+    alignItems: 'center',
+    width: '100%',
+    minHeight: 0,
   },
   iconName: {
     fontSize: 14,
