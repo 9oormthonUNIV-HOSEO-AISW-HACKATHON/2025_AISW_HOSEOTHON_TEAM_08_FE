@@ -28,6 +28,7 @@ interface Recommendation {
   satisfaction: number;
   type: 'personal' | 'generation' | 'room';
   roomName?: string;
+  originalData: TripRecommendation; // 원본 데이터 저장
 }
 
 export default function HomeScreen() {
@@ -59,6 +60,7 @@ export default function HomeScreen() {
           : Object.values(rec.satisfaction || {})[0] as number || 85,
         type: rec.type || 'personal',
         roomName: rec.roomName,
+        originalData: rec, // 원본 데이터 저장
       }));
 
       setRecommendations(formattedRecs);
@@ -209,7 +211,24 @@ export default function HomeScreen() {
                   <Button
                     title="자세히 보기"
                     onPress={() => {
-                      // TODO: 상세 화면으로 이동
+                      // 사용자 세대 정보 가져오기
+                      const userGeneration = user?.generation || '20대';
+                      // 추천 데이터에서 동반자 세대 정보 추론
+                      const companionGeneration = rec.originalData.for_generation ||
+                        (rec.originalData.type === 'generation' ? '50대+' : userGeneration);
+
+                      navigation.navigate('Recommendation', {
+                        userGeneration,
+                        companionGeneration,
+                        preferences: {
+                          purposes: [],
+                          budget: '',
+                        },
+                        analysis: rec.originalData.analysisSummary ? {
+                          summary: rec.originalData.analysisSummary,
+                        } : {},
+                        recommendation: rec.originalData,
+                      });
                     }}
                     variant="outline"
                     size="small"
