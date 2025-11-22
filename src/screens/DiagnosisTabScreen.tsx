@@ -38,15 +38,18 @@ export default function DiagnosisTabScreen() {
 
     try {
       const profile = await getUserProfile(user.id);
-      // 프로필이 존재하면 진단 완료로 간주
-      setHasProfile(!!profile.profile);
+      const hasActualProfile = profile.profile &&
+        (profile.profile.speed !== 50 ||
+          profile.profile.stamina !== 50 ||
+          profile.profile.budget !== 50 ||
+          profile.profile.photo !== 50 ||
+          profile.profile.tradition !== 50);
+      setHasProfile(hasActualProfile);
     } catch (error: any) {
-      console.error('프로필 확인 오류:', error);
-      // 404 또는 프로필이 없는 경우 진단 미완료로 간주
-      if (error.response?.status === 404 || error.response?.status === 400) {
+      const errorStatus = error.status || error.response?.status;
+      if (errorStatus === 401 || errorStatus === 403 || errorStatus === 400 || errorStatus === 404) {
         setHasProfile(false);
       } else {
-        // 기타 오류는 재진단 가능한 것으로 간주 (기존 프로필이 있을 수 있음)
         setHasProfile(true);
       }
     } finally {

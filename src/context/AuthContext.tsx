@@ -34,11 +34,26 @@ export const AuthProvider: React.FC<{ children: ReactNode }> = ({ children }) =>
             const storedToken = await AsyncStorage.getItem('token');
 
             if (storedUser && storedToken) {
-                setUser(JSON.parse(storedUser));
-                setToken(storedToken);
+                try {
+                    const parsedUser = JSON.parse(storedUser);
+                    setUser(parsedUser);
+                    setToken(storedToken);
+                } catch (parseError) {
+                    await AsyncStorage.removeItem('user');
+                    await AsyncStorage.removeItem('token');
+                }
+            } else {
+                if (storedUser) await AsyncStorage.removeItem('user');
+                if (storedToken) await AsyncStorage.removeItem('token');
             }
         } catch (error) {
             console.error('인증 데이터 로드 오류:', error);
+            try {
+                await AsyncStorage.removeItem('user');
+                await AsyncStorage.removeItem('token');
+            } catch (cleanupError) {
+                console.error('스토리지 정리 실패:', cleanupError);
+            }
         } finally {
             setIsLoading(false);
         }

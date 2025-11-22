@@ -1,6 +1,6 @@
-import axios from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserAnswer, AnalysisResult, TripRecommendation, TalkingGuide, UserPreferences } from '../types';
+import { UserAnswer, AnalysisResult, TripRecommendation, TalkingGuide, UserPreferences, ApiError } from '../types';
 import { API_BASE_URL } from '@env';
 
 const api = axios.create({
@@ -11,7 +11,6 @@ const api = axios.create({
   },
 });
 
-// 요청 인터셉터: 토큰 자동 추가
 api.interceptors.request.use(
   async (config) => {
     const token = await AsyncStorage.getItem('token');
@@ -25,114 +24,166 @@ api.interceptors.request.use(
   }
 );
 
+api.interceptors.response.use(
+  (response: AxiosResponse) => {
+    return response;
+  },
+  async (error: AxiosError<ApiError>) => {
+    if (error.response) {
+      const { status, data } = error.response;
+
+      if (status === 401 || status === 403) {
+        await AsyncStorage.removeItem('token');
+        await AsyncStorage.removeItem('user');
+      }
+
+      const errorMessage = data?.message || data?.error || error.message || '알 수 없는 오류가 발생했습니다.';
+
+      return Promise.reject({
+        status,
+        message: errorMessage,
+        data,
+      });
+    }
+
+    if (error.request) {
+      return Promise.reject({
+        status: 0,
+        message: '네트워크 연결을 확인해주세요.',
+        data: null,
+      });
+    }
+
+    return Promise.reject({
+      status: 0,
+      message: error.message || '알 수 없는 오류가 발생했습니다.',
+      data: null,
+    });
+  }
+);
+
+export class ApiException extends Error {
+  status: number;
+  data: ApiError | null;
+
+  constructor(status: number, message: string, data: ApiError | null = null) {
+    super(message);
+    this.status = status;
+    this.data = data;
+    this.name = 'ApiException';
+  }
+}
+
+export const healthCheck = async (): Promise<{ status: string; message: string }> => {
+  try {
+    const response = await api.get<{ status: string; message: string }>('/health');
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '헬스 체크에 실패했습니다.', error.data);
+  }
+};
+
 export const analyzeGenerationDifference = async (
+  userId: string,
   userAnswers: UserAnswer[],
   userGeneration: string,
   companionGeneration: string
 ): Promise<AnalysisResult> => {
-  const response = await api.post<AnalysisResult>('/analyze', {
-    userAnswers,
-    userGeneration,
-    companionGeneration,
-  });
-  return response.data;
-};
-
-export const getTripRecommendation = async (
-  userGeneration: string,
-  companionGeneration: string,
-  preferences: UserPreferences,
-  analysis: AnalysisResult,
-  budget?: string,
-  travelStyle?: string
-): Promise<TripRecommendation> => {
-  const response = await api.post<TripRecommendation>('/recommend', {
-    userGeneration,
-    companionGeneration,
-    preferences,
-    analysis,
-    budget,
-    travelStyle,
-  });
-  return response.data;
+  try {
+    const response = await api.post<AnalysisResult>('/analyze', {
+      userId,
+      userAnswers,
+      userGeneration,
+      companionGeneration,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '분석에 실패했습니다.', error.data);
+  }
 };
 
 export const getTalkingGuide = async (
   userGeneration: string,
   companionGeneration: string,
-  recommendation: TripRecommendation
+  recommendation: TripRecommendation,
+  userProfile: AnalysisResult['userProfile'],
+  companionProfile: AnalysisResult['companionProfile']
 ): Promise<TalkingGuide> => {
-  const response = await api.post<TalkingGuide>('/talking-guide', {
-    userGeneration,
-    companionGeneration,
-    recommendation,
-  });
-  return response.data;
+  try {
+    const response = await api.post<TalkingGuide>('/talking-guide', {
+      userGeneration,
+      companionGeneration,
+      recommendation: {
+        title: recommendation.title,
+        course: recommendation.course,
+        why: recommendation.why,
+      },
+      userProfile,
+      companionProfile,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '대화 가이드 생성에 실패했습니다.', error.data);
+  }
 };
 
-export const saveTripRecord = async (
-  userId: string,
-  tripId: string,
-  record: any
-): Promise<{ success: boolean; recordId: string }> => {
-  const response = await api.post('/records', {
-    userId,
-    tripId,
-    record,
-  });
-  return response.data;
-};
-
-export const getTripRecords = async (
-  userId: string
-): Promise<{ records: any[] }> => {
-  const response = await api.get(`/records/${userId}`);
-  return response.data;
-};
-
-// 개인 기반 AI 추천
 export const getPersonalRecommendations = async (
   userId: string
-): Promise<any[]> => {
-  const response = await api.get(`/recommendations/personal/${userId}`);
-  return response.data;
+): Promise<TripRecommendation[]> => {
+  try {
+    const response = await api.get<TripRecommendation[]>(`/recommendations/personal/${userId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '개인 추천을 불러오는데 실패했습니다.', error.data);
+  }
 };
 
-// 방 기반 AI 추천
 export const getRoomRecommendations = async (
   roomId: string
-): Promise<any[]> => {
-  const response = await api.get(`/recommendations/room/${roomId}`);
-  return response.data;
+): Promise<TripRecommendation[]> => {
+  try {
+    const response = await api.get<TripRecommendation[]>(`/recommendations/room/${roomId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '방 추천을 불러오는데 실패했습니다.', error.data);
+  }
 };
 
-// 좋아요/저장
 export const saveTrip = async (
   userId: string,
   tripId: string
-): Promise<{ success: boolean }> => {
-  const response = await api.post('/trips/save', { userId, tripId });
-  return response.data;
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await api.post<{ success: boolean; message: string }>('/trips/save', { userId, tripId });
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '여행지 저장에 실패했습니다.', error.data);
+  }
 };
 
-// 좋아요 취소
 export const unsaveTrip = async (
   userId: string,
   tripId: string
-): Promise<{ success: boolean }> => {
-  const response = await api.post('/trips/unsave', { userId, tripId });
-  return response.data;
+): Promise<{ success: boolean; message: string }> => {
+  try {
+    const response = await api.post<{ success: boolean; message: string }>('/trips/unsave', { userId, tripId });
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '저장 취소에 실패했습니다.', error.data);
+  }
 };
 
-// 저장된 여행지 조회
 export const getSavedTrips = async (
   userId: string
-): Promise<{ trips: any[] }> => {
-  const response = await api.get(`/trips/saved/${userId}`);
-  return response.data;
+): Promise<{ trips: TripRecommendation[] }> => {
+  try {
+    const response = await api.get<{ trips: TripRecommendation[] }>(`/trips/saved/${userId}`);
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '저장된 여행지를 불러오는데 실패했습니다.', error.data);
+  }
 };
 
-// 사용자 프로필 조회
 export const getUserProfile = async (
   userId: string
 ): Promise<{
@@ -147,7 +198,22 @@ export const getUserProfile = async (
     tradition: number;
   };
 }> => {
-  const response = await api.get(`/users/${userId}/profile`);
-  return response.data;
+  try {
+    const response = await api.get<{
+      name: string;
+      email: string;
+      generation?: string;
+      profile: {
+        speed: number;
+        stamina: number;
+        budget: number;
+        photo: number;
+        tradition: number;
+      };
+    }>(`/users/${userId}/profile`);
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '프로필을 불러오는데 실패했습니다.', error.data);
+  }
 };
 

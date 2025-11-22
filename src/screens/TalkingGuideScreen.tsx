@@ -5,13 +5,14 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { getTalkingGuide } from '../services/api';
-import { TalkingGuide } from '../types';
+import { getTalkingGuide, ApiException } from '../services/api';
+import { TalkingGuide, AnalysisResult } from '../types';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { Colors } from '../constants/colors';
@@ -22,21 +23,36 @@ type TalkingGuideRouteProp = RouteProp<RootStackParamList, 'TalkingGuide'>;
 export default function TalkingGuideScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<TalkingGuideRouteProp>();
-  const { userGeneration, companionGeneration, recommendation } = route.params;
+  const { userGeneration, companionGeneration, recommendation, analysis } = route.params as {
+    userGeneration: string;
+    companionGeneration: string;
+    recommendation: any;
+    analysis?: AnalysisResult;
+  };
   const [guide, setGuide] = useState<TalkingGuide | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
   useEffect(() => {
     const loadGuide = async () => {
       try {
+        if (!analysis) {
+          throw new Error('분석 결과가 필요합니다.');
+        }
+
         const guideData = await getTalkingGuide(
           userGeneration,
           companionGeneration,
-          recommendation
+          recommendation,
+          analysis.userProfile,
+          analysis.companionProfile
         );
         setGuide(guideData);
-      } catch (error) {
+      } catch (error: any) {
         console.error('가이드 로드 오류:', error);
+        const errorMessage = error instanceof ApiException 
+          ? error.message 
+          : error.message || '대화 가이드를 불러오는데 실패했습니다.';
+        Alert.alert('오류', errorMessage);
       } finally {
         setIsLoading(false);
       }

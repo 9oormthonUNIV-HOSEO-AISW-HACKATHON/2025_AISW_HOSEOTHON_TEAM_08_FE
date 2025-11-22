@@ -19,13 +19,14 @@ type RecommendationRouteProp = RouteProp<RootStackParamList, 'Recommendation'>;
 export default function RecommendationScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<RecommendationRouteProp>();
-  const { recommendation, userGeneration, companionGeneration } = route.params;
+  const { recommendation, userGeneration, companionGeneration, analysis } = route.params;
 
   const handleTalkingGuide = () => {
     navigation.navigate('TalkingGuide', {
       userGeneration,
       companionGeneration,
       recommendation,
+      analysis,
     });
   };
 

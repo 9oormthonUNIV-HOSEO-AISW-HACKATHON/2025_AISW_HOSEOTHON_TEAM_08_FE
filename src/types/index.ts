@@ -34,17 +34,14 @@ export interface AnalysisResult {
 }
 
 export interface TripRecommendation {
-  for_generation: string;
+  id?: string;
+  title: string;
+  description?: string;
   course: string[];
   why: string;
-  options: {
-    [key: string]: string;
-  };
-  talking_tip: string;
-  satisfaction: {
-    [key: string]: number;
-  };
-  title: string;
+  satisfaction: number | { [key: string]: number };
+  type?: 'personal' | 'generation' | 'room';
+  roomName?: string;
 }
 
 export interface TalkingGuide {
@@ -60,5 +57,36 @@ export interface UserPreferences {
   budget?: string;
   preferredPlaces?: string;
   companionStyle?: string;
+}
+
+export interface UserProfile {
+  name: string;
+  email: string;
+  generation?: string;
+  profile: {
+    speed: number;
+    stamina: number;
+    budget: number;
+    photo: number;
+    tradition: number;
+  };
+}
+
+export interface Comment {
+  id: string;
+  userId: string;
+  userName: string;
+  content: string;
+  createdAt: string;
+}
+
+export interface Vote {
+  [recommendationId: string]: number;
+}
+
+export interface ApiError {
+  success?: boolean;
+  error?: string;
+  message?: string;
 }
 

@@ -19,12 +19,10 @@ export default function SplashScreen() {
   const { isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
-    // 인증 상태 로딩이 완료될 때까지 대기
     if (isLoading) {
       return;
     }
 
-    // 최소 1.5초는 스플래시 화면 표시
     const timer = setTimeout(() => {
       if (isAuthenticated) {
         navigation.replace('Main');

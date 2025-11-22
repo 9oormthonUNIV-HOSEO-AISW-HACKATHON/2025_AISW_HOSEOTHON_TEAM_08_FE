@@ -1,5 +1,7 @@
-import axios from 'axios';
+import axios, { AxiosError, AxiosResponse } from 'axios';
 import { API_BASE_URL } from '@env';
+import { ApiError } from '../types';
+import { ApiException } from './api';
 
 const api = axios.create({
   baseURL: API_BASE_URL,
@@ -9,7 +11,37 @@ const api = axios.create({
   },
 });
 
-// 인증 API는 토큰이 필요 없으므로 인터셉터 추가하지 않음
+api.interceptors.response.use(
+  (response: AxiosResponse) => {
+    return response;
+  },
+  async (error: AxiosError<ApiError>) => {
+    if (error.response) {
+      const { status, data } = error.response;
+      const errorMessage = data?.message || data?.error || error.message || '알 수 없는 오류가 발생했습니다.';
+
+      return Promise.reject({
+        status,
+        message: errorMessage,
+        data,
+      });
+    }
+
+    if (error.request) {
+      return Promise.reject({
+        status: 0,
+        message: '네트워크 연결을 확인해주세요.',
+        data: null,
+      });
+    }
+
+    return Promise.reject({
+      status: 0,
+      message: error.message || '알 수 없는 오류가 발생했습니다.',
+      data: null,
+    });
+  }
+);
 
 export interface LoginResponse {
   success: boolean;
@@ -29,23 +61,31 @@ export const register = async (
   name: string,
   generation?: string
 ): Promise<LoginResponse> => {
-  const response = await api.post<LoginResponse>('/auth/register', {
-    email,
-    password,
-    name,
-    ...(generation && { generation }),
-  });
-  return response.data;
+  try {
+    const response = await api.post<LoginResponse>('/auth/register', {
+      email,
+      password,
+      name,
+      generation,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '회원가입에 실패했습니다.', error.data);
+  }
 };
 
 export const login = async (
   email: string,
   password: string
 ): Promise<LoginResponse> => {
-  const response = await api.post<LoginResponse>('/auth/login', {
-    email,
-    password,
-  });
-  return response.data;
+  try {
+    const response = await api.post<LoginResponse>('/auth/login', {
+      email,
+      password,
+    });
+    return response.data;
+  } catch (error: any) {
+    throw new ApiException(error.status || 0, error.message || '로그인에 실패했습니다.', error.data);
+  }
 };
 

@@ -5,13 +5,15 @@ import {
   StyleSheet,
   TouchableOpacity,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { UserAnswer } from '../types';
-import { analyzeGenerationDifference } from '../services/api';
+import { analyzeGenerationDifference, ApiException } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { Colors } from '../constants/colors';
@@ -68,6 +70,7 @@ export default function DiagnosisScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<DiagnosisRouteProp>();
   const { userGeneration, companionGeneration } = route.params;
+  const { user } = useAuth();
 
   const [answers, setAnswers] = useState<UserAnswer[]>(
     QUESTIONS.map((q) => ({ questionId: q.id, value: 50 }))
@@ -76,11 +79,14 @@ export default function DiagnosisScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSliderChange = (questionId: number, value: number) => {
-    setAnswers((prev) =>
-      prev.map((ans) =>
+    console.log('버튼 클릭:', { questionId, value });
+    setAnswers((prev) => {
+      const updated = prev.map((ans) =>
         ans.questionId === questionId ? { ...ans, value } : ans
-      )
-    );
+      );
+      console.log('업데이트된 답변:', updated.find(a => a.questionId === questionId));
+      return updated;
+    });
   };
 
   const handleNext = async () => {
@@ -88,9 +94,15 @@ export default function DiagnosisScreen() {
       setCurrentQuestion(currentQuestion + 1);
     } else {
       // 마지막 질문 - 분석 요청
+      if (!user?.id) {
+        Alert.alert('오류', '로그인이 필요합니다.');
+        return;
+      }
+
       setIsLoading(true);
       try {
         const analysis = await analyzeGenerationDifference(
+          user.id,
           answers,
           userGeneration,
           companionGeneration
@@ -101,9 +113,12 @@ export default function DiagnosisScreen() {
           answers,
           analysis,
         });
-      } catch (error) {
+      } catch (error: any) {
         console.error('분석 오류:', error);
-        // 에러 처리
+        const errorMessage = error instanceof ApiException
+          ? error.message
+          : '분석 중 오류가 발생했습니다. 다시 시도해주세요.';
+        Alert.alert('오류', errorMessage);
       } finally {
         setIsLoading(false);
       }
@@ -111,7 +126,8 @@ export default function DiagnosisScreen() {
   };
 
   const currentQ = QUESTIONS[currentQuestion];
-  const currentAnswer = answers.find((a) => a.questionId === currentQ.id)?.value || 50;
+  const answer = answers.find((a) => a.questionId === currentQ.id);
+  const currentAnswer = answer !== undefined ? answer.value : 50;
 
   return (
     <SafeAreaView style={styles.container}>
@@ -129,8 +145,8 @@ export default function DiagnosisScreen() {
         </Text>
       </View>
 
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >
@@ -140,7 +156,7 @@ export default function DiagnosisScreen() {
 
         <Card style={styles.questionCard}>
           <Text style={styles.questionText}>{currentQ.question}</Text>
-          
+
           <View style={styles.sliderContainer}>
             <Text style={styles.sliderLabel}>{currentQ.left}</Text>
             <View style={styles.sliderTrack}>
@@ -161,26 +177,34 @@ export default function DiagnosisScreen() {
           </View>
 
           <View style={styles.buttonRow}>
-            {[0, 25, 50, 75, 100].map((value) => (
-              <TouchableOpacity
-                key={value}
-                style={[
-                  styles.valueButton,
-                  Math.abs(currentAnswer - value) < 5 && styles.valueButtonActive,
-                ]}
-                onPress={() => handleSliderChange(currentQ.id, value)}
-                activeOpacity={0.7}
-              >
-                <Text
+            {[0, 25, 50, 75, 100].map((value) => {
+              const isActive = currentAnswer === value;
+              console.log(`버튼 ${value}: isActive=${isActive}, currentAnswer=${currentAnswer}`);
+              return (
+                <TouchableOpacity
+                  key={value}
                   style={[
-                    styles.valueButtonText,
-                    Math.abs(currentAnswer - value) < 5 && styles.valueButtonTextActive,
+                    styles.valueButton,
+                    isActive && styles.valueButtonActive,
                   ]}
+                  onPress={() => {
+                    console.log(`버튼 ${value} 클릭됨`);
+                    handleSliderChange(currentQ.id, value);
+                  }}
+                  activeOpacity={0.7}
+                  hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >
-                  {value}
-                </Text>
-              </TouchableOpacity>
-            ))}
+                  <Text
+                    style={[
+                      styles.valueButtonText,
+                      isActive && styles.valueButtonTextActive,
+                    ]}
+                  >
+                    {value}
+                  </Text>
+                </TouchableOpacity>
+              );
+            })}
           </View>
         </Card>
 

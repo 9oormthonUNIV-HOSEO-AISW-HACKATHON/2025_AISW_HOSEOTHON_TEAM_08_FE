@@ -4,13 +4,15 @@ import {
   Text,
   StyleSheet,
   ScrollView,
+  Alert,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import { AnalysisResult } from '../types';
-import { getTripRecommendation } from '../services/api';
+import { getPersonalRecommendations, ApiException } from '../services/api';
+import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
 import Button from '../components/Button';
 import { Colors } from '../constants/colors';
@@ -22,23 +24,38 @@ export default function AnalysisResultScreen() {
   const navigation = useNavigation<NavigationProp>();
   const route = useRoute<AnalysisResultRouteProp>();
   const { userGeneration, companionGeneration, analysis } = route.params;
+  const { user } = useAuth();
 
   const [isLoading, setIsLoading] = useState(false);
 
   const handleNext = async () => {
+    if (!user?.id) {
+      Alert.alert('오류', '로그인이 필요합니다.');
+      return;
+    }
+
     setIsLoading(true);
     try {
-      const recommendation = await getTripRecommendation(
-        userGeneration,
-        companionGeneration,
-        {
-          purposes: ['감성', '사진'],
-          budget: '5~10만원',
-        },
-        analysis,
-        '5~10만원',
-        '여유롭게'
-      );
+      console.log('========================================');
+      console.log('📤 [AnalysisResultScreen] 개인 추천 조회 시작');
+      console.log('User ID:', user.id);
+
+      const recommendations = await getPersonalRecommendations(user.id);
+
+      console.log('✅ [AnalysisResultScreen] 개인 추천 조회 성공');
+      console.log('Response Type:', typeof recommendations);
+      console.log('Response IsArray:', Array.isArray(recommendations));
+      console.log('Response Data (원문):', JSON.stringify(recommendations, null, 2));
+      console.log('========================================');
+
+      if (!Array.isArray(recommendations) || recommendations.length === 0) {
+        Alert.alert('알림', '아직 추천이 생성되지 않았습니다. 잠시 후 다시 시도해주세요.');
+        navigation.navigate('Main');
+        return;
+      }
+
+      const recommendation = recommendations[0];
+
       navigation.navigate('Recommendation', {
         userGeneration,
         companionGeneration,
@@ -49,8 +66,23 @@ export default function AnalysisResultScreen() {
         analysis,
         recommendation,
       });
-    } catch (error) {
-      console.error('추천 생성 오류:', error);
+    } catch (error: any) {
+      console.error('========================================');
+      console.error('❌ [AnalysisResultScreen] 추천 생성 오류');
+      console.error('Error Status:', error.status);
+      console.error('Error Message:', error.message);
+      console.error('Error Data:', error.data);
+      console.error('Full Error:', JSON.stringify(error, null, 2));
+      console.error('========================================');
+
+      const errorMessage = error instanceof ApiException
+        ? error.message
+        : '추천을 불러오는데 실패했습니다. 다시 시도해주세요.';
+      Alert.alert('오류', errorMessage);
+
+      if (error.status === 400 || error.status === 403) {
+        navigation.navigate('Main');
+      }
     } finally {
       setIsLoading(false);
     }

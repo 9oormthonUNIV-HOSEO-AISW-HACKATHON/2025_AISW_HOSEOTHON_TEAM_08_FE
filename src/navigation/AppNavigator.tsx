@@ -46,6 +46,7 @@ export type RootStackParamList = {
     userGeneration: string;
     companionGeneration: string;
     recommendation: any;
+    analysis?: any;
   };
   Room: {
     roomId: string;
