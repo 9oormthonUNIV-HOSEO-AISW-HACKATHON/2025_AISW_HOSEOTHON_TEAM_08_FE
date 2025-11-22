@@ -77,6 +77,7 @@ export default function DiagnosisScreen() {
   );
   const [currentQuestion, setCurrentQuestion] = useState(0);
   const [isLoading, setIsLoading] = useState(false);
+  const [sliderWidth, setSliderWidth] = useState(200);
 
   const handleSliderChange = (questionId: number, value: number) => {
     setAnswers((prev) =>
@@ -156,20 +157,42 @@ export default function DiagnosisScreen() {
 
           <View style={styles.sliderContainer}>
             <Text style={styles.sliderLabel}>{currentQ.left}</Text>
-            <View style={styles.sliderTrack}>
-              <View
-                style={[
-                  styles.sliderFill,
-                  { width: `${currentAnswer}%` },
-                ]}
-              />
-              <View
-                style={[
-                  styles.sliderThumb,
-                  { left: `${currentAnswer}%` },
-                ]}
-              />
-            </View>
+            <TouchableOpacity
+              style={styles.sliderTrackContainer}
+              activeOpacity={1}
+              onLayout={(e) => {
+                const { width } = e.nativeEvent.layout;
+                if (width > 0) {
+                  setSliderWidth(width);
+                }
+              }}
+              onPress={(e) => {
+                const { locationX } = e.nativeEvent;
+                if (sliderWidth > 0) {
+                  const percentage = Math.max(0, Math.min(100, (locationX / sliderWidth) * 100));
+                  const closestValue = [0, 25, 50, 75, 100].reduce((prev, curr) =>
+                    Math.abs(curr - percentage) < Math.abs(prev - percentage) ? curr : prev
+                  );
+                  handleSliderChange(currentQ.id, closestValue);
+                }
+              }}
+            >
+              <View style={styles.sliderTrack}>
+                <View
+                  style={[
+                    styles.sliderFill,
+                    { width: `${currentAnswer}%` },
+                  ]}
+                />
+                <View
+                  style={[
+                    styles.sliderThumb,
+                    { left: `${currentAnswer}%` },
+                  ]}
+                  pointerEvents="none"
+                />
+              </View>
+            </TouchableOpacity>
             <Text style={styles.sliderLabel}>{currentQ.right}</Text>
           </View>
 
@@ -280,13 +303,17 @@ const styles = StyleSheet.create({
     textAlign: 'center',
     fontWeight: '500',
   },
-  sliderTrack: {
+  sliderTrackContainer: {
     flex: 1,
+    marginHorizontal: 16,
+    paddingVertical: 10,
+  },
+  sliderTrack: {
+    width: '100%',
     height: 10,
     backgroundColor: Colors.borderLight,
     borderRadius: 5,
     position: 'relative',
-    marginHorizontal: 16,
   },
   sliderFill: {
     height: '100%',
@@ -323,7 +350,9 @@ const styles = StyleSheet.create({
     borderWidth: 2,
     borderColor: Colors.border,
     minWidth: 60,
+    minHeight: 44,
     alignItems: 'center',
+    justifyContent: 'center',
   },
   valueButtonActive: {
     backgroundColor: Colors.primary,

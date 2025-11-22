@@ -73,6 +73,7 @@ export default function Button({
       onPress={onPress}
       disabled={disabled || loading}
       activeOpacity={0.7}
+      hitSlop={{ top: 8, bottom: 8, left: 8, right: 8 }}
     >
       {loading ? (
         <ActivityIndicator
@@ -107,6 +108,7 @@ const styles = StyleSheet.create({
     paddingHorizontal: 24,
     paddingVertical: 14,
     minHeight: 48,
+    minWidth: 44,
   },
   primary: {
     backgroundColor: Colors.primary,
