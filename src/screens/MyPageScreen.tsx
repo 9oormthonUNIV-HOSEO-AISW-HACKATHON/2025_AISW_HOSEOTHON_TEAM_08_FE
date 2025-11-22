@@ -271,7 +271,7 @@ export default function MyPageScreen() {
 
         {/* 설정 */}
         <View style={styles.section}>
-          <View style={styles.sectionTitleContainer}>
+          <View style={[styles.sectionTitleContainer, styles.settingsTitleContainer]}>
             <Icon name="settings" size={20} color={Colors.primary} />
             <Text style={styles.sectionTitle}>설정</Text>
           </View>
@@ -339,6 +339,9 @@ const styles = StyleSheet.create({
     flexDirection: 'row',
     alignItems: 'center',
     gap: 8,
+  },
+  settingsTitleContainer: {
+    marginBottom: 16,
   },
   sectionTitle: {
     fontSize: 20,

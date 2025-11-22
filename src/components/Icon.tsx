@@ -1,9 +1,35 @@
 import React from 'react';
-import MaterialIcons from 'react-native-vector-icons/MaterialIcons';
-import Ionicons from 'react-native-vector-icons/Ionicons';
-import Feather from 'react-native-vector-icons/Feather';
-import FontAwesome5 from 'react-native-vector-icons/FontAwesome5';
+import { View, StyleSheet } from 'react-native';
 import { Colors } from '../constants/colors';
+import {
+    HomeIcon,
+    DiagnosisIcon,
+    ShareIcon,
+    UserIcon,
+    HeartIcon,
+    HeartOutlineIcon,
+    ShareAltIcon,
+    CommentIcon,
+    RefreshIcon,
+    ThumbsUpIcon,
+    MapIcon,
+    CameraIcon,
+    NatureIcon,
+    CultureIcon,
+    FoodIcon,
+    PhotoIcon,
+    TravelIcon,
+    StarIcon,
+    BookmarkIcon,
+    SettingsIcon,
+    LogoutIcon,
+    ArrowRightIcon,
+    CheckIcon,
+    LinkIcon,
+    QrCodeIcon,
+    UsersIcon,
+    SparklesIcon,
+} from '../assets/icons';
 
 export type IconName =
     | 'home'
@@ -41,34 +67,34 @@ interface IconProps {
     style?: any;
 }
 
-const iconMap: Record<IconName, { library: any; iconName: string }> = {
-    'home': { library: MaterialIcons, iconName: 'home' },
-    'diagnosis': { library: MaterialIcons, iconName: 'assessment' },
-    'share': { library: MaterialIcons, iconName: 'share' },
-    'user': { library: MaterialIcons, iconName: 'person' },
-    'heart': { library: MaterialIcons, iconName: 'favorite' },
-    'heart-outline': { library: MaterialIcons, iconName: 'favorite-border' },
-    'share-alt': { library: FontAwesome5, iconName: 'share-alt' },
-    'comment': { library: MaterialIcons, iconName: 'comment' },
-    'refresh': { library: MaterialIcons, iconName: 'refresh' },
-    'thumbs-up': { library: MaterialIcons, iconName: 'thumb-up' },
-    'map': { library: MaterialIcons, iconName: 'map' },
-    'camera': { library: MaterialIcons, iconName: 'camera-alt' },
-    'nature': { library: MaterialIcons, iconName: 'park' },
-    'culture': { library: MaterialIcons, iconName: 'museum' },
-    'food': { library: MaterialIcons, iconName: 'restaurant' },
-    'photo': { library: MaterialIcons, iconName: 'photo-camera' },
-    'travel': { library: MaterialIcons, iconName: 'flight' },
-    'star': { library: MaterialIcons, iconName: 'star' },
-    'bookmark': { library: MaterialIcons, iconName: 'bookmark' },
-    'settings': { library: MaterialIcons, iconName: 'settings' },
-    'logout': { library: MaterialIcons, iconName: 'exit-to-app' },
-    'arrow-right': { library: MaterialIcons, iconName: 'arrow-forward' },
-    'check': { library: MaterialIcons, iconName: 'check-circle' },
-    'link': { library: MaterialIcons, iconName: 'link' },
-    'qr-code': { library: MaterialIcons, iconName: 'qr-code-scanner' },
-    'users': { library: MaterialIcons, iconName: 'people' },
-    'sparkles': { library: MaterialIcons, iconName: 'whatshot' },
+const iconMap: Record<IconName, React.ComponentType<{ size?: number; color?: string }>> = {
+    'home': HomeIcon,
+    'diagnosis': DiagnosisIcon,
+    'share': ShareIcon,
+    'user': UserIcon,
+    'heart': HeartIcon,
+    'heart-outline': HeartOutlineIcon,
+    'share-alt': ShareAltIcon,
+    'comment': CommentIcon,
+    'refresh': RefreshIcon,
+    'thumbs-up': ThumbsUpIcon,
+    'map': MapIcon,
+    'camera': CameraIcon,
+    'nature': NatureIcon,
+    'culture': CultureIcon,
+    'food': FoodIcon,
+    'photo': PhotoIcon,
+    'travel': TravelIcon,
+    'star': StarIcon,
+    'bookmark': BookmarkIcon,
+    'settings': SettingsIcon,
+    'logout': LogoutIcon,
+    'arrow-right': ArrowRightIcon,
+    'check': CheckIcon,
+    'link': LinkIcon,
+    'qr-code': QrCodeIcon,
+    'users': UsersIcon,
+    'sparkles': SparklesIcon,
 };
 
 export default function Icon({
@@ -77,19 +103,22 @@ export default function Icon({
     color = Colors.text,
     style
 }: IconProps) {
-    const iconConfig = iconMap[name];
-    if (!iconConfig) {
+    const IconComponent = iconMap[name];
+    if (!IconComponent) {
         return null;
     }
 
-    const IconComponent = iconConfig.library;
     return (
-        <IconComponent
-            name={iconConfig.iconName}
-            size={size}
-            color={color}
-            style={style}
-        />
+        <View style={[styles.container, style]}>
+            <IconComponent size={size} color={color} />
+        </View>
     );
 }
+
+const styles = StyleSheet.create({
+    container: {
+        alignItems: 'center',
+        justifyContent: 'center',
+    },
+});
 
