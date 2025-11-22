@@ -1,0 +1,50 @@
+import axios from 'axios';
+
+const API_BASE_URL = __DEV__ 
+  ? 'http://localhost:3000/api' 
+  : 'https://your-api-domain.com/api';
+
+const api = axios.create({
+  baseURL: API_BASE_URL,
+  timeout: 10000,
+  headers: {
+    'Content-Type': 'application/json',
+  },
+});
+
+// 인증 API는 토큰이 필요 없으므로 인터셉터 추가하지 않음
+
+export interface LoginResponse {
+  success: boolean;
+  user: {
+    id: string;
+    email: string;
+    name: string;
+  };
+  token: string;
+}
+
+export const register = async (
+  email: string,
+  password: string,
+  name: string
+): Promise<LoginResponse> => {
+  const response = await api.post<LoginResponse>('/auth/register', {
+    email,
+    password,
+    name,
+  });
+  return response.data;
+};
+
+export const login = async (
+  email: string,
+  password: string
+): Promise<LoginResponse> => {
+  const response = await api.post<LoginResponse>('/auth/login', {
+    email,
+    password,
+  });
+  return response.data;
+};
+
