@@ -18,10 +18,7 @@ import { getUserRooms } from '../services/rooms';
 import { useAuth } from '../context/AuthContext';
 import { getSavedTrips, getUserProfile } from '../services/api';
 import axios from 'axios';
-
-const API_BASE_URL = __DEV__
-  ? 'http://localhost:3000/api'
-  : 'https://your-api-domain.com/api';
+import { API_BASE_URL } from '@env';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 

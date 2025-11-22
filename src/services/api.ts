@@ -1,10 +1,7 @@
 import axios from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
 import { UserAnswer, AnalysisResult, TripRecommendation, TalkingGuide, UserPreferences } from '../types';
-
-const API_BASE_URL = __DEV__
-    ? 'http://localhost:3000/api'
-    : 'https://your-api-domain.com/api';
+import { API_BASE_URL } from '@env';
 
 const api = axios.create({
     baseURL: API_BASE_URL,
