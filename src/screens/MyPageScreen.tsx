@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   TouchableOpacity,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Card from '../components/Card';
@@ -57,13 +57,7 @@ export default function MyPageScreen() {
     profileCreatedAt?: string;
   } | null>(null);
 
-  useEffect(() => {
-    if (user) {
-      loadData();
-    }
-  }, [user]);
-
-  const loadData = async () => {
+  const loadData = useCallback(async () => {
     if (!user) {
       return;
     }
@@ -102,7 +96,15 @@ export default function MyPageScreen() {
     } catch (error) {
       console.error('데이터 로드 오류:', error);
     }
-  };
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadData();
+      }
+    }, [user, loadData])
+  );
 
   const handleLogout = async () => {
     try {

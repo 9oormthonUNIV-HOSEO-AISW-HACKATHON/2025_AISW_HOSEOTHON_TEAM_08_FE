@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -8,7 +8,7 @@ import {
   RefreshControl,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Button from '../components/Button';
@@ -38,13 +38,7 @@ export default function HomeScreen() {
   const [refreshing, setRefreshing] = useState(false);
   const [savedTrips, setSavedTrips] = useState<string[]>([]);
 
-  useEffect(() => {
-    if (user) {
-      loadRecommendations();
-    }
-  }, [user]);
-
-  const loadRecommendations = async () => {
+  const loadRecommendations = useCallback(async () => {
     if (!user) {
       return;
     }
@@ -94,7 +88,15 @@ export default function HomeScreen() {
 
       setRecommendations([]);
     }
-  };
+  }, [user, logout, navigation]);
+
+  useFocusEffect(
+    useCallback(() => {
+      if (user) {
+        loadRecommendations();
+      }
+    }, [user, loadRecommendations])
+  );
 
   const onRefresh = async () => {
     setRefreshing(true);

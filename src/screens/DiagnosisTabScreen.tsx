@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
@@ -7,7 +7,7 @@ import {
   ActivityIndicator,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Button from '../components/Button';
@@ -25,17 +25,14 @@ export default function DiagnosisTabScreen() {
   const [hasProfile, setHasProfile] = useState<boolean | null>(null);
   const [isLoading, setIsLoading] = useState(true);
 
-  useEffect(() => {
-    checkUserProfile();
-  }, [user]);
-
-  const checkUserProfile = async () => {
+  const checkUserProfile = useCallback(async () => {
     if (!user) {
       setHasProfile(false);
       setIsLoading(false);
       return;
     }
 
+    setIsLoading(true);
     try {
       const profile = await getUserProfile(user.id);
       setHasProfile(profile.diagnosisCompleted);
@@ -45,7 +42,13 @@ export default function DiagnosisTabScreen() {
     } finally {
       setIsLoading(false);
     }
-  };
+  }, [user]);
+
+  useFocusEffect(
+    useCallback(() => {
+      checkUserProfile();
+    }, [checkUserProfile])
+  );
 
   const handleStartDiagnosis = () => {
     navigation.navigate('Onboarding');
