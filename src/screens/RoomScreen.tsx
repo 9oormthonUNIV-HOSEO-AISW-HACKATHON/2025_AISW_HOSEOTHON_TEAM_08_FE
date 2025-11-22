@@ -16,10 +16,8 @@ import Button from '../components/Button';
 import Icon from '../components/Icon';
 import { Colors } from '../constants/colors';
 import { getRoomRecommendations, saveTrip, unsaveTrip } from '../services/api';
-import { getRoomParticipants } from '../services/rooms';
+import { getRoomParticipants, getRoom, getRoomComments, getRoomVotes, createRoomComment, createRoomVote } from '../services/rooms';
 import { useAuth } from '../context/AuthContext';
-import axios from 'axios';
-import { API_BASE_URL } from '@env';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 type RoomRouteProp = RouteProp<RootStackParamList, 'Room'>;
@@ -75,9 +73,9 @@ export default function RoomScreen() {
   const loadRoomData = async () => {
     try {
       // 방 정보 조회
-      const roomResponse = await axios.get(`${API_BASE_URL}/rooms/${roomId}`);
-      if (roomResponse.data.room) {
-        setRoomName(roomResponse.data.room.name);
+      const roomResponse = await getRoom(roomId);
+      if (roomResponse.room) {
+        setRoomName(roomResponse.room.name);
       }
 
       // 참여자 정보 조회
@@ -125,7 +123,7 @@ export default function RoomScreen() {
       setRecommendations(formattedRecs);
     } catch (error: any) {
       console.error('추천 로드 오류:', error);
-      
+
       if (error.status === 500) {
         console.warn('서버에서 추천을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
@@ -136,8 +134,8 @@ export default function RoomScreen() {
 
   const loadComments = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/rooms/${roomId}/comments`);
-      setComments(response.data.comments || []);
+      const response = await getRoomComments(roomId);
+      setComments(response.comments || []);
     } catch (error) {
       console.error('댓글 로드 오류:', error);
     }
@@ -145,8 +143,8 @@ export default function RoomScreen() {
 
   const loadVotes = async () => {
     try {
-      const response = await axios.get(`${API_BASE_URL}/rooms/${roomId}/votes`);
-      setVotes(response.data.votes || {});
+      const response = await getRoomVotes(roomId);
+      setVotes(response.votes || {});
     } catch (error) {
       console.error('투표 로드 오류:', error);
     }
@@ -158,10 +156,7 @@ export default function RoomScreen() {
     }
 
     try {
-      await axios.post(`${API_BASE_URL}/rooms/${roomId}/votes`, {
-        userId: user.id,
-        recommendationId: tripId,
-      });
+      await createRoomVote(roomId, user.id, tripId);
       setVotes((prev) => ({
         ...prev,
         [tripId]: (prev[tripId] || 0) + 1,
@@ -193,12 +188,9 @@ export default function RoomScreen() {
     if (!commentText.trim() || !user) return;
 
     try {
-      const response = await axios.post(`${API_BASE_URL}/rooms/${roomId}/comments`, {
-        userId: user.id,
-        content: commentText,
-      });
+      const response = await createRoomComment(roomId, user.id, commentText);
 
-      setComments([...comments, response.data.comment]);
+      setComments([...comments, response.comment]);
       setCommentText('');
     } catch (error) {
       console.error('댓글 작성 오류:', error);
@@ -381,19 +373,20 @@ export default function RoomScreen() {
                       name={savedTrips.includes(rec.id) ? 'heart' : 'heart-outline'}
                       size={24}
                       color={savedTrips.includes(rec.id) ? Colors.error : Colors.textSecondary}
+                      style={styles.actionIcon}
                     />
                     <Text style={styles.actionText}>좋아요</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionButton}>
-                    <Icon name="share-alt" size={24} color={Colors.textSecondary} />
+                    <Icon name="share-alt" size={24} color={Colors.textSecondary} style={styles.actionIcon} />
                     <Text style={styles.actionText}>공유</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionButton}>
-                    <Icon name="comment" size={24} color={Colors.textSecondary} />
+                    <Icon name="comment" size={24} color={Colors.textSecondary} style={styles.actionIcon} />
                     <Text style={styles.actionText}>댓글</Text>
                   </TouchableOpacity>
                   <TouchableOpacity style={styles.actionButton}>
-                    <Icon name="refresh" size={24} color={Colors.textSecondary} />
+                    <Icon name="refresh" size={24} color={Colors.textSecondary} style={styles.actionIcon} />
                     <Text style={styles.actionText}>다른 추천</Text>
                   </TouchableOpacity>
                 </View>
@@ -496,9 +489,11 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 16,
+    flexWrap: 'wrap',
   },
   sectionIcon: {
     marginRight: 4,
+    flexShrink: 0,
   },
   sectionTitle: {
     fontSize: 20,
@@ -510,6 +505,7 @@ const styles = StyleSheet.create({
     alignItems: 'center',
     gap: 8,
     marginBottom: 12,
+    flexWrap: 'wrap',
   },
   courseTitleContainer: {
     flexDirection: 'row',
@@ -640,6 +636,7 @@ const styles = StyleSheet.create({
     justifyContent: 'center',
     alignItems: 'center',
     marginRight: 14,
+    flexShrink: 0,
   },
   placeNumberText: {
     color: Colors.backgroundLight,
@@ -650,10 +647,12 @@ const styles = StyleSheet.create({
     fontSize: 16,
     color: Colors.text,
     flex: 1,
+    flexShrink: 1,
     fontWeight: '500',
   },
   photoIcon: {
     marginLeft: 8,
+    flexShrink: 0,
   },
   optionsSection: {
     marginBottom: 20,
@@ -677,15 +676,20 @@ const styles = StyleSheet.create({
     paddingHorizontal: 12,
     backgroundColor: Colors.backgroundLight,
     borderRadius: 8,
+    gap: 12,
   },
   optionsLabel: {
     fontSize: 14,
     fontWeight: '600',
     color: Colors.text,
+    flexShrink: 0,
   },
   optionsValue: {
     fontSize: 14,
     color: Colors.textSecondary,
+    flex: 1,
+    flexShrink: 1,
+    textAlign: 'right',
   },
   infoSection: {
     marginTop: 16,
@@ -738,6 +742,7 @@ const styles = StyleSheet.create({
     fontSize: 14,
     color: Colors.textSecondary,
     lineHeight: 20,
+    flexShrink: 1,
   },
   actionButtons: {
     flexDirection: 'row',
@@ -750,10 +755,20 @@ const styles = StyleSheet.create({
   actionButton: {
     alignItems: 'center',
     padding: 8,
+    flex: 1,
+    minWidth: 0,
+  },
+  actionIcon: {
+    flexShrink: 0,
+    width: 24,
+    height: 24,
   },
   actionText: {
     fontSize: 12,
     color: Colors.textSecondary,
+    marginTop: 4,
+    textAlign: 'center',
+    flexShrink: 1,
   },
   voteSection: {
     flexDirection: 'row',
@@ -823,7 +838,8 @@ const styles = StyleSheet.create({
     maxHeight: 100,
   },
   sendButton: {
-    paddingHorizontal: 20,
-    alignSelf: 'flex-end',
+    paddingHorizontal: 30,
+    alignSelf: 'flex-start',
+    marginTop: 8,
   },
 });
