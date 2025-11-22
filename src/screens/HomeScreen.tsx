@@ -1,16 +1,13 @@
-import React, { useState, useCallback, useEffect } from 'react';
+import React, { useState, useCallback } from 'react';
 import {
   View,
   Text,
   StyleSheet,
   ScrollView,
   TouchableOpacity,
-  RefreshControl,
-  AppState,
-  AppStateStatus,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
+import { useNavigation, useFocusEffect } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Button from '../components/Button';
@@ -37,7 +34,6 @@ export default function HomeScreen() {
   const navigation = useNavigation<NavigationProp>();
   const { user, logout } = useAuth();
   const [recommendations, setRecommendations] = useState<Recommendation[]>([]);
-  const [refreshing, setRefreshing] = useState(false);
   const [savedTrips, setSavedTrips] = useState<string[]>([]);
 
   const loadRecommendations = useCallback(async () => {
@@ -92,14 +88,6 @@ export default function HomeScreen() {
     }
   }, [user, logout, navigation]);
 
-  const isFocused = useIsFocused();
-
-  useEffect(() => {
-    if (user) {
-      loadRecommendations();
-    }
-  }, [user]);
-
   useFocusEffect(
     useCallback(() => {
       if (user) {
@@ -107,34 +95,6 @@ export default function HomeScreen() {
       }
     }, [user, loadRecommendations])
   );
-
-  useEffect(() => {
-    if (!isFocused || !user) return;
-
-    const unsubscribe = navigation.addListener('focus', () => {
-      loadRecommendations();
-    });
-
-    return unsubscribe;
-  }, [isFocused, user, loadRecommendations, navigation]);
-
-  useEffect(() => {
-    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
-      if (nextAppState === 'active' && user && isFocused) {
-        loadRecommendations();
-      }
-    });
-
-    return () => {
-      subscription.remove();
-    };
-  }, [user, loadRecommendations, isFocused]);
-
-  const onRefresh = async () => {
-    setRefreshing(true);
-    await loadRecommendations();
-    setRefreshing(false);
-  };
 
   const handleLike = (id: string) => {
     if (savedTrips.includes(id)) {
@@ -153,9 +113,6 @@ export default function HomeScreen() {
       <ScrollView
         style={styles.scrollView}
         contentContainerStyle={styles.content}
-        refreshControl={
-          <RefreshControl refreshing={refreshing} onRefresh={onRefresh} />
-        }
         showsVerticalScrollIndicator={false}
       >
         {/* 헤더 섹션 */}
