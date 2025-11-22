@@ -1,6 +1,6 @@
 import axios, { AxiosError, AxiosResponse } from 'axios';
 import AsyncStorage from '@react-native-async-storage/async-storage';
-import { UserAnswer, AnalysisResult, TripRecommendation, TalkingGuide, UserPreferences, ApiError } from '../types';
+import { UserAnswer, AnalysisResult, TripRecommendation, TalkingGuide, UserPreferences, UserProfile, ApiError } from '../types';
 import { API_BASE_URL } from '@env';
 
 const api = axios.create({
@@ -37,12 +37,19 @@ api.interceptors.response.use(
         await AsyncStorage.removeItem('user');
       }
 
-      const errorMessage = data?.message || data?.error || error.message || '알 수 없는 오류가 발생했습니다.';
+      const errorCode = data?.error || '';
+      const errorMessage = data?.message || error.message || '알 수 없는 오류가 발생했습니다.';
+      const isDiagnosisNotCompleted =
+        errorCode === 'DIAGNOSIS_NOT_COMPLETED' ||
+        errorMessage.includes('진단') ||
+        errorMessage.includes('프로필');
 
       return Promise.reject({
         status,
         message: errorMessage,
+        error: errorCode,
         data,
+        isDiagnosisNotCompleted,
       });
     }
 
@@ -65,12 +72,19 @@ api.interceptors.response.use(
 export class ApiException extends Error {
   status: number;
   data: ApiError | null;
+  error?: string;
+  isDiagnosisNotCompleted?: boolean;
 
   constructor(status: number, message: string, data: ApiError | null = null) {
     super(message);
     this.status = status;
     this.data = data;
+    this.error = data?.error;
     this.name = 'ApiException';
+    this.isDiagnosisNotCompleted =
+      data?.error === 'DIAGNOSIS_NOT_COMPLETED' ||
+      message.includes('진단') ||
+      message.includes('프로필');
   }
 }
 
@@ -186,31 +200,9 @@ export const getSavedTrips = async (
 
 export const getUserProfile = async (
   userId: string
-): Promise<{
-  name: string;
-  email: string;
-  generation?: string;
-  profile: {
-    speed: number;
-    stamina: number;
-    budget: number;
-    photo: number;
-    tradition: number;
-  };
-}> => {
+): Promise<UserProfile> => {
   try {
-    const response = await api.get<{
-      name: string;
-      email: string;
-      generation?: string;
-      profile: {
-        speed: number;
-        stamina: number;
-        budget: number;
-        photo: number;
-        tradition: number;
-      };
-    }>(`/users/${userId}/profile`);
+    const response = await api.get<UserProfile>(`/users/${userId}/profile`);
     return response.data;
   } catch (error: any) {
     throw new ApiException(error.status || 0, error.message || '프로필을 불러오는데 실패했습니다.', error.data);

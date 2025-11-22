@@ -96,7 +96,6 @@ export default function RoomScreen() {
   };
 
   const handleGetRecommendations = async () => {
-    // 모든 참여자가 진단을 완료했는지 확인
     if (participants.length < 1) {
       return;
     }
@@ -105,14 +104,11 @@ export default function RoomScreen() {
     try {
       const recs = await getRoomRecommendations(roomId);
 
-      // API 응답이 배열이 아닌 경우 처리
       if (!Array.isArray(recs)) {
-        console.warn('추천 응답이 배열 형식이 아닙니다:', recs);
         setRecommendations([]);
         return;
       }
 
-      // API 응답을 컴포넌트 형식에 맞게 변환
       const formattedRecs: Recommendation[] = recs.map((rec: any) => ({
         id: rec.id || `rec_${Date.now()}_${Math.random()}`,
         title: rec.title || '추천 여행',
@@ -121,8 +117,6 @@ export default function RoomScreen() {
         course: rec.course || [],
         satisfaction: rec.satisfaction || {},
         options: rec.options || {},
-        analysisSummary: rec.analysisSummary,
-        aiAdjustment: rec.aiAdjustment,
         estimated_time: rec.estimated_time || rec.estimatedTime,
         estimated_cost: rec.estimated_cost || rec.estimatedCost,
         talking_tip: rec.talking_tip || rec.talkingTip,
@@ -131,7 +125,8 @@ export default function RoomScreen() {
       setRecommendations(formattedRecs);
     } catch (error: any) {
       console.error('추천 로드 오류:', error);
-      if (error.response?.status === 500) {
+      
+      if (error.status === 500) {
         console.warn('서버에서 추천을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
       }
     } finally {
@@ -344,6 +339,35 @@ export default function RoomScreen() {
                         </View>
                       ))}
                     </View>
+                  </View>
+                )}
+
+                {/* 여행 정보 */}
+                {(rec.estimated_time || rec.estimated_cost) && (
+                  <View style={styles.infoSection}>
+                    <Text style={styles.infoSectionTitle}>📊 여행 정보</Text>
+                    <View style={styles.infoRow}>
+                      {rec.estimated_time && (
+                        <View style={styles.infoItem}>
+                          <Text style={styles.infoLabel}>⏱ 소요 시간</Text>
+                          <Text style={styles.infoValue}>{rec.estimated_time}</Text>
+                        </View>
+                      )}
+                      {rec.estimated_cost && (
+                        <View style={styles.infoItem}>
+                          <Text style={styles.infoLabel}>💰 예상 비용</Text>
+                          <Text style={styles.infoValue}>{rec.estimated_cost}</Text>
+                        </View>
+                      )}
+                    </View>
+                  </View>
+                )}
+
+                {/* 대화 팁 */}
+                {rec.talking_tip && (
+                  <View style={styles.talkingTipSection}>
+                    <Text style={styles.talkingTipTitle}>💬 대화 팁</Text>
+                    <Text style={styles.talkingTipText}>{rec.talking_tip}</Text>
                   </View>
                 )}
 
@@ -662,6 +686,58 @@ const styles = StyleSheet.create({
   optionsValue: {
     fontSize: 14,
     color: Colors.textSecondary,
+  },
+  infoSection: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: Colors.backgroundLight,
+    borderRadius: 12,
+    marginBottom: 16,
+  },
+  infoSectionTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 12,
+  },
+  infoRow: {
+    gap: 12,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    paddingVertical: 8,
+  },
+  infoLabel: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  infoValue: {
+    fontSize: 14,
+    color: Colors.text,
+    fontWeight: '700',
+  },
+  talkingTipSection: {
+    marginTop: 16,
+    padding: 16,
+    backgroundColor: Colors.backgroundLight,
+    borderRadius: 12,
+    marginBottom: 16,
+    borderLeftWidth: 4,
+    borderLeftColor: Colors.primary,
+  },
+  talkingTipTitle: {
+    fontSize: 16,
+    fontWeight: '700',
+    color: Colors.text,
+    marginBottom: 8,
+  },
+  talkingTipText: {
+    fontSize: 14,
+    color: Colors.textSecondary,
+    lineHeight: 20,
   },
   actionButtons: {
     flexDirection: 'row',

@@ -16,6 +16,7 @@ import Card from '../components/Card';
 import Icon from '../components/Icon';
 import { Colors } from '../constants/colors';
 import { getPersonalRecommendations, saveTrip, unsaveTrip } from '../services/api';
+import { TripRecommendation } from '../types';
 import { useAuth } from '../context/AuthContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
@@ -56,7 +57,7 @@ export default function HomeScreen() {
         return;
       }
 
-      const formattedRecs: Recommendation[] = recs.map((rec: any) => ({
+      const formattedRecs: Recommendation[] = recs.map((rec: TripRecommendation) => ({
         id: rec.id || `rec_${Date.now()}_${Math.random()}`,
         title: rec.title || '추천 여행',
         description: rec.description || '',
@@ -83,7 +84,11 @@ export default function HomeScreen() {
       }
 
       if (errorStatus === 400) {
-        setRecommendations([]);
+        if (error.error === 'DIAGNOSIS_NOT_COMPLETED' || error.isDiagnosisNotCompleted) {
+          setRecommendations([]);
+        } else {
+          setRecommendations([]);
+        }
         return;
       }
 

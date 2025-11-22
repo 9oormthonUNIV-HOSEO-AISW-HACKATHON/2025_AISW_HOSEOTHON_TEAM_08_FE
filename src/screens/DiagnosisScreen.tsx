@@ -79,14 +79,11 @@ export default function DiagnosisScreen() {
   const [isLoading, setIsLoading] = useState(false);
 
   const handleSliderChange = (questionId: number, value: number) => {
-    console.log('버튼 클릭:', { questionId, value });
-    setAnswers((prev) => {
-      const updated = prev.map((ans) =>
+    setAnswers((prev) =>
+      prev.map((ans) =>
         ans.questionId === questionId ? { ...ans, value } : ans
-      );
-      console.log('업데이트된 답변:', updated.find(a => a.questionId === questionId));
-      return updated;
-    });
+      )
+    );
   };
 
   const handleNext = async () => {
@@ -179,7 +176,6 @@ export default function DiagnosisScreen() {
           <View style={styles.buttonRow}>
             {[0, 25, 50, 75, 100].map((value) => {
               const isActive = currentAnswer === value;
-              console.log(`버튼 ${value}: isActive=${isActive}, currentAnswer=${currentAnswer}`);
               return (
                 <TouchableOpacity
                   key={value}
@@ -187,10 +183,7 @@ export default function DiagnosisScreen() {
                     styles.valueButton,
                     isActive && styles.valueButtonActive,
                   ]}
-                  onPress={() => {
-                    console.log(`버튼 ${value} 클릭됨`);
-                    handleSliderChange(currentQ.id, value);
-                  }}
+                  onPress={() => handleSliderChange(currentQ.id, value)}
                   activeOpacity={0.7}
                   hitSlop={{ top: 10, bottom: 10, left: 10, right: 10 }}
                 >

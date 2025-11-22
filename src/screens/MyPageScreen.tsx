@@ -45,13 +45,16 @@ export default function MyPageScreen() {
     name?: string;
     email?: string;
     generation?: string;
+    diagnosisCompleted?: boolean;
     profile?: {
       speed: number;
       stamina: number;
       budget: number;
       photo: number;
       tradition: number;
+      tag?: string;
     };
+    profileCreatedAt?: string;
   } | null>(null);
 
   useEffect(() => {
@@ -93,6 +96,8 @@ export default function MyPageScreen() {
         email: profileResponse.email,
         generation: profileResponse.generation,
         profile: profileResponse.profile,
+        diagnosisCompleted: profileResponse.diagnosisCompleted,
+        profileCreatedAt: profileResponse.profileCreatedAt,
       });
     } catch (error) {
       console.error('데이터 로드 오류:', error);

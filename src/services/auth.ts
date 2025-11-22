@@ -18,12 +18,19 @@ api.interceptors.response.use(
   async (error: AxiosError<ApiError>) => {
     if (error.response) {
       const { status, data } = error.response;
-      const errorMessage = data?.message || data?.error || error.message || '알 수 없는 오류가 발생했습니다.';
+      const errorCode = data?.error || '';
+      const errorMessage = data?.message || error.message || '알 수 없는 오류가 발생했습니다.';
+      const isDiagnosisNotCompleted =
+        errorCode === 'DIAGNOSIS_NOT_COMPLETED' ||
+        errorMessage.includes('진단') ||
+        errorMessage.includes('프로필');
 
       return Promise.reject({
         status,
         message: errorMessage,
+        error: errorCode,
         data,
+        isDiagnosisNotCompleted,
       });
     }
 

@@ -56,9 +56,18 @@ export default function RecommendationScreen() {
       >
         <View style={styles.header}>
           <Text style={styles.title}>📍 {recommendation.title}</Text>
-          <Text style={styles.subtitle}>
-            {recommendation.for_generation} 추천 코스
-          </Text>
+          {recommendation.for_generation && (
+            <Text style={styles.subtitle}>
+              {recommendation.for_generation} 추천 코스
+            </Text>
+          )}
+          {recommendation.type && !recommendation.for_generation && (
+            <Text style={styles.subtitle}>
+              {recommendation.type === 'personal' ? '개인 맞춤' : 
+               recommendation.type === 'room' ? '방 추천' : 
+               '세대 추천'} 코스
+            </Text>
+          )}
         </View>
 
         {recommendation.course && recommendation.course.length > 0 && (
@@ -105,7 +114,32 @@ export default function RecommendationScreen() {
           </Card>
         )}
 
-        {recommendation.satisfaction && Object.keys(recommendation.satisfaction).length > 0 && (
+        {(recommendation.estimated_time || recommendation.estimated_cost) && (
+          <Card variant="warning">
+            <Text style={styles.sectionTitle}>📊 여행 정보</Text>
+            {recommendation.estimated_time && (
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>⏱ 예상 소요 시간</Text>
+                <Text style={styles.infoValue}>{recommendation.estimated_time}</Text>
+              </View>
+            )}
+            {recommendation.estimated_cost && (
+              <View style={styles.infoItem}>
+                <Text style={styles.infoLabel}>💰 예상 비용</Text>
+                <Text style={styles.infoValue}>{recommendation.estimated_cost}</Text>
+              </View>
+            )}
+          </Card>
+        )}
+
+        {recommendation.talking_tip && (
+          <Card variant="info">
+            <Text style={styles.sectionTitle}>💬 대화 팁</Text>
+            <Text style={styles.talkingTipText}>{recommendation.talking_tip}</Text>
+          </Card>
+        )}
+
+        {typeof recommendation.satisfaction === 'object' && recommendation.satisfaction && Object.keys(recommendation.satisfaction).length > 0 && (
           <Card variant="info">
             <Text style={styles.sectionTitle}>📌 동반 만족도 예측</Text>
             {Object.entries(recommendation.satisfaction).map(([key, value]) => (
@@ -115,6 +149,16 @@ export default function RecommendationScreen() {
                 value={value as number}
               />
             ))}
+          </Card>
+        )}
+
+        {typeof recommendation.satisfaction === 'number' && (
+          <Card variant="info">
+            <Text style={styles.sectionTitle}>📌 만족도 예측</Text>
+            <SatisfactionBar
+              label="예상 만족도"
+              value={recommendation.satisfaction}
+            />
           </Card>
         )}
 
@@ -279,6 +323,28 @@ const styles = StyleSheet.create({
   },
   button: {
     flex: 1,
+  },
+  infoItem: {
+    flexDirection: 'row',
+    justifyContent: 'space-between',
+    alignItems: 'center',
+    marginBottom: 12,
+    paddingVertical: 8,
+  },
+  infoLabel: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    fontWeight: '600',
+  },
+  infoValue: {
+    fontSize: 15,
+    color: Colors.text,
+    fontWeight: '700',
+  },
+  talkingTipText: {
+    fontSize: 15,
+    color: Colors.textSecondary,
+    lineHeight: 24,
   },
 });
 

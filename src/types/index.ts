@@ -42,6 +42,13 @@ export interface TripRecommendation {
   satisfaction: number | { [key: string]: number };
   type?: 'personal' | 'generation' | 'room';
   roomName?: string;
+  for_generation?: string;
+  options?: { [key: string]: string };
+  estimated_time?: string;
+  estimated_cost?: string;
+  talking_tip?: string;
+  analysisSummary?: string;
+  aiAdjustment?: any;
 }
 
 export interface TalkingGuide {
@@ -63,13 +70,16 @@ export interface UserProfile {
   name: string;
   email: string;
   generation?: string;
+  diagnosisCompleted: boolean;
   profile: {
     speed: number;
     stamina: number;
     budget: number;
     photo: number;
     tradition: number;
+    tag?: string;
   };
+  profileCreatedAt?: string;
 }
 
 export interface Comment {
@@ -87,6 +97,16 @@ export interface Vote {
 export interface ApiError {
   success?: boolean;
   error?: string;
-  message?: string;
+  message: string;
+  data?: any;
+  details?: any;
 }
+
+export type ErrorCode =
+  | 'BAD_REQUEST'
+  | 'DIAGNOSIS_NOT_COMPLETED'
+  | 'UNAUTHORIZED'
+  | 'FORBIDDEN'
+  | 'NOT_FOUND'
+  | 'INTERNAL_SERVER_ERROR';
 

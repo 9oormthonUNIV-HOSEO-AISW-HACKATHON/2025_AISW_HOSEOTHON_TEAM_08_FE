@@ -10,7 +10,7 @@ import { SafeAreaView } from 'react-native-safe-area-context';
 import { useNavigation, useRoute, RouteProp } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
-import { AnalysisResult } from '../types';
+import { AnalysisResult, TripRecommendation } from '../types';
 import { getPersonalRecommendations, ApiException } from '../services/api';
 import { useAuth } from '../context/AuthContext';
 import Card from '../components/Card';
@@ -36,17 +36,7 @@ export default function AnalysisResultScreen() {
 
     setIsLoading(true);
     try {
-      console.log('========================================');
-      console.log('📤 [AnalysisResultScreen] 개인 추천 조회 시작');
-      console.log('User ID:', user.id);
-
       const recommendations = await getPersonalRecommendations(user.id);
-
-      console.log('✅ [AnalysisResultScreen] 개인 추천 조회 성공');
-      console.log('Response Type:', typeof recommendations);
-      console.log('Response IsArray:', Array.isArray(recommendations));
-      console.log('Response Data (원문):', JSON.stringify(recommendations, null, 2));
-      console.log('========================================');
 
       if (!Array.isArray(recommendations) || recommendations.length === 0) {
         Alert.alert('알림', '아직 추천이 생성되지 않았습니다. 잠시 후 다시 시도해주세요.');
@@ -54,7 +44,7 @@ export default function AnalysisResultScreen() {
         return;
       }
 
-      const recommendation = recommendations[0];
+      const recommendation = recommendations[0] as TripRecommendation;
 
       navigation.navigate('Recommendation', {
         userGeneration,
@@ -67,20 +57,20 @@ export default function AnalysisResultScreen() {
         recommendation,
       });
     } catch (error: any) {
-      console.error('========================================');
-      console.error('❌ [AnalysisResultScreen] 추천 생성 오류');
-      console.error('Error Status:', error.status);
-      console.error('Error Message:', error.message);
-      console.error('Error Data:', error.data);
-      console.error('Full Error:', JSON.stringify(error, null, 2));
-      console.error('========================================');
-
       const errorMessage = error instanceof ApiException
         ? error.message
         : '추천을 불러오는데 실패했습니다. 다시 시도해주세요.';
+      
       Alert.alert('오류', errorMessage);
 
-      if (error.status === 400 || error.status === 403) {
+      const errorStatus = error.status || error.response?.status;
+      if (errorStatus === 400) {
+        if (error.error === 'DIAGNOSIS_NOT_COMPLETED' || error.isDiagnosisNotCompleted) {
+          navigation.navigate('Main');
+        } else {
+          navigation.navigate('Main');
+        }
+      } else if (errorStatus === 403) {
         navigation.navigate('Main');
       }
     } finally {

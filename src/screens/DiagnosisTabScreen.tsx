@@ -38,20 +38,10 @@ export default function DiagnosisTabScreen() {
 
     try {
       const profile = await getUserProfile(user.id);
-      const hasActualProfile = profile.profile &&
-        (profile.profile.speed !== 50 ||
-          profile.profile.stamina !== 50 ||
-          profile.profile.budget !== 50 ||
-          profile.profile.photo !== 50 ||
-          profile.profile.tradition !== 50);
-      setHasProfile(hasActualProfile);
+      setHasProfile(profile.diagnosisCompleted);
     } catch (error: any) {
-      const errorStatus = error.status || error.response?.status;
-      if (errorStatus === 401 || errorStatus === 403 || errorStatus === 400 || errorStatus === 404) {
-        setHasProfile(false);
-      } else {
-        setHasProfile(true);
-      }
+      console.error('프로필 확인 오류:', error);
+      setHasProfile(false);
     } finally {
       setIsLoading(false);
     }
