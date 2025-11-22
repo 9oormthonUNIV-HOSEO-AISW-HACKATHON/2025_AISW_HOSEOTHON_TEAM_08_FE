@@ -1,54 +1,54 @@
-// 모던하고 세련된 색상 팔레트
+// 자연스럽고 따뜻한 지구색 톤의 색상 팔레트
 export const Colors = {
-  // Primary - 부드러운 블루 그라데이션
-  primary: '#6366F1', // Indigo
-  primaryDark: '#4F46E5',
-  primaryLight: '#EEF2FF',
-  
-  // Secondary - 따뜻한 코랄
-  secondary: '#EC4899', // Pink
-  secondaryLight: '#FCE7F3',
-  
-  // Accent - 생동감 있는 그린
-  accent: '#10B981', // Emerald
-  accentLight: '#D1FAE5',
-  
-  // Background - 부드러운 그레이 톤
-  background: '#FAFBFC',
+  // Primary - 올리브 그린
+  primary: '#888C04', // Olive Green
+  primaryDark: '#6B6E03',
+  primaryLight: '#E8E9C1',
+
+  // Secondary - 중간 톤 갈색
+  secondary: '#73624D', // Medium Brown
+  secondaryLight: '#D4CCC2',
+
+  // Accent - 밝은 베이지
+  accent: '#A69076', // Light Beige
+  accentLight: '#E8E2D8',
+
+  // Background - 부드러운 베이지 톤
+  background: '#FAF9F7',
   backgroundLight: '#FFFFFF',
-  backgroundDark: '#F3F4F6',
-  
-  // Text - 명확한 계층 구조
-  text: '#111827', // 거의 검정
-  textSecondary: '#6B7280', // 중간 회색
-  textLight: '#9CA3AF', // 밝은 회색
-  textMuted: '#D1D5DB', // 매우 밝은 회색
-  
-  // Border - 미묘한 구분선
-  border: '#E5E7EB',
-  borderLight: '#F3F4F6',
-  
+  backgroundDark: '#F5F3F0',
+
+  // Text - 어두운 갈색 계열
+  text: '#40382B', // Dark Brown
+  textSecondary: '#73624D', // Medium Brown
+  textLight: '#A69076', // Light Beige
+  textMuted: '#D4CCC2', // Very Light Beige
+
+  // Border - 베이지 톤
+  border: '#E8E2D8',
+  borderLight: '#F5F3F0',
+
   // Status
-  success: '#10B981',
-  successLight: '#D1FAE5',
-  warning: '#F59E0B',
-  warningLight: '#FEF3C7',
-  error: '#EF4444',
-  errorLight: '#FEE2E2',
-  info: '#3B82F6',
-  infoLight: '#DBEAFE',
-  
+  success: '#888C04',
+  successLight: '#E8E9C1',
+  warning: '#A69076',
+  warningLight: '#E8E2D8',
+  error: '#B85450',
+  errorLight: '#F5DEDD',
+  info: '#73624D',
+  infoLight: '#D4CCC2',
+
   // Card & Shadow
   card: '#FFFFFF',
-  cardShadow: 'rgba(0, 0, 0, 0.05)',
-  cardShadowHover: 'rgba(0, 0, 0, 0.1)',
-  
+  cardShadow: 'rgba(64, 56, 43, 0.05)',
+  cardShadowHover: 'rgba(64, 56, 43, 0.1)',
+
   // Gradient
-  gradientStart: '#6366F1',
-  gradientEnd: '#8B5CF6',
-  gradientSecondary: '#EC4899',
-  
+  gradientStart: '#888C04',
+  gradientEnd: '#73624D',
+  gradientSecondary: '#A69076',
+
   // Overlay
-  overlay: 'rgba(0, 0, 0, 0.5)',
-  overlayLight: 'rgba(0, 0, 0, 0.1)',
+  overlay: 'rgba(64, 56, 43, 0.5)',
+  overlayLight: 'rgba(64, 56, 43, 0.1)',
 };
