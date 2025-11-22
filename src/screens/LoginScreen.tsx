@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import React, { useState, useEffect } from 'react';
 import {
   View,
   Text,
@@ -22,11 +22,18 @@ type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function LoginScreen() {
   const navigation = useNavigation<NavigationProp>();
-  const { login: authLogin } = useAuth();
+  const { login: authLogin, isAuthenticated, isLoading } = useAuth();
   const [isLogin, setIsLogin] = useState(true);
   const [email, setEmail] = useState('');
   const [password, setPassword] = useState('');
   const [name, setName] = useState('');
+
+  // 이미 로그인된 경우 메인으로 리다이렉트
+  useEffect(() => {
+    if (!isLoading && isAuthenticated) {
+      navigation.replace('Main');
+    }
+  }, [isLoading, isAuthenticated, navigation]);
 
   const handleSubmit = async () => {
     try {
@@ -40,7 +47,7 @@ export default function LoginScreen() {
         }
         response = await register(email, password, name);
       }
-      
+
       // AuthContext에 사용자 정보 저장
       if (response.success && response.user && response.token) {
         await authLogin(response.user, response.token);
@@ -48,14 +55,19 @@ export default function LoginScreen() {
         navigation.replace('Main');
       }
     } catch (error: any) {
-      Alert.alert('오류', error.response?.data?.error || error.response?.data?.message || '로그인에 실패했습니다.');
+      const errorMessage =
+        error.response?.data?.message ||
+        error.response?.data?.error ||
+        error.message ||
+        (isLogin ? '로그인에 실패했습니다.' : '회원가입에 실패했습니다.');
+      Alert.alert('오류', errorMessage);
     }
   };
 
   return (
     <SafeAreaView style={styles.container}>
-      <ScrollView 
-        style={styles.scrollView} 
+      <ScrollView
+        style={styles.scrollView}
         contentContainerStyle={styles.content}
         showsVerticalScrollIndicator={false}
       >

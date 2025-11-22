@@ -60,54 +60,62 @@ export default function RecommendationScreen() {
           </Text>
         </View>
 
-        <Card style={styles.courseCard}>
-          <Text style={styles.sectionTitle}>🗓 추천 코스</Text>
-          {recommendation.course.map((place: string, index: number) => (
-            <View key={index} style={styles.courseItem}>
-              <View style={styles.courseNumber}>
-                <Text style={styles.courseNumberText}>{index + 1}</Text>
+        {recommendation.course && recommendation.course.length > 0 && (
+          <Card style={styles.courseCard}>
+            <Text style={styles.sectionTitle}>🗓 추천 코스</Text>
+            {recommendation.course.map((place: string, index: number) => (
+              <View key={index} style={styles.courseItem}>
+                <View style={styles.courseNumber}>
+                  <Text style={styles.courseNumberText}>{index + 1}</Text>
+                </View>
+                <View style={styles.courseContent}>
+                  <Text style={styles.courseText}>{place}</Text>
+                  {index < recommendation.course.length - 1 && (
+                    <View style={styles.courseConnector}>
+                      <Text style={styles.courseConnectorText}>↓</Text>
+                    </View>
+                  )}
+                </View>
               </View>
-              <View style={styles.courseContent}>
-                <Text style={styles.courseText}>{place}</Text>
-                {index < recommendation.course.length - 1 && (
-                  <View style={styles.courseConnector}>
-                    <Text style={styles.courseConnectorText}>↓</Text>
-                  </View>
-                )}
+            ))}
+          </Card>
+        )}
+
+        {recommendation.why && (
+          <Card variant="info">
+            <Text style={styles.sectionTitle}>💡 왜 이 코스인가요?</Text>
+            <Text style={styles.whyText}>{recommendation.why}</Text>
+          </Card>
+        )}
+
+        {recommendation.options && Object.keys(recommendation.options).length > 0 && (
+          <Card variant="warning">
+            <Text style={styles.sectionTitle}>👥 세대별 옵션</Text>
+            {Object.entries(recommendation.options).map(([key, value]) => (
+              <View key={key} style={styles.optionItem}>
+                <View style={styles.optionBadge}>
+                  <Text style={styles.optionBadgeText}>
+                    {key === 'parents' || key === 'companion' ? '동반자' : '당신'}
+                  </Text>
+                </View>
+                <Text style={styles.optionValue}>{value as string}</Text>
               </View>
-            </View>
-          ))}
-        </Card>
+            ))}
+          </Card>
+        )}
 
-        <Card variant="info">
-          <Text style={styles.sectionTitle}>💡 왜 이 코스인가요?</Text>
-          <Text style={styles.whyText}>{recommendation.why}</Text>
-        </Card>
-
-        <Card variant="warning">
-          <Text style={styles.sectionTitle}>👥 세대별 옵션</Text>
-          {Object.entries(recommendation.options).map(([key, value]) => (
-            <View key={key} style={styles.optionItem}>
-              <View style={styles.optionBadge}>
-                <Text style={styles.optionBadgeText}>
-                  {key === 'parents' || key === 'companion' ? '동반자' : '당신'}
-                </Text>
-              </View>
-              <Text style={styles.optionValue}>{value as string}</Text>
-            </View>
-          ))}
-        </Card>
-
-        <Card variant="info">
-          <Text style={styles.sectionTitle}>📌 동반 만족도 예측</Text>
-          {Object.entries(recommendation.satisfaction).map(([key, value]) => (
-            <SatisfactionBar
-              key={key}
-              label={key === companionGeneration ? '동반자' : '당신'}
-              value={value as number}
-            />
-          ))}
-        </Card>
+        {recommendation.satisfaction && Object.keys(recommendation.satisfaction).length > 0 && (
+          <Card variant="info">
+            <Text style={styles.sectionTitle}>📌 동반 만족도 예측</Text>
+            {Object.entries(recommendation.satisfaction).map(([key, value]) => (
+              <SatisfactionBar
+                key={key}
+                label={key === companionGeneration ? '동반자' : '당신'}
+                value={value as number}
+              />
+            ))}
+          </Card>
+        )}
 
         <View style={styles.buttonRow}>
           <Button

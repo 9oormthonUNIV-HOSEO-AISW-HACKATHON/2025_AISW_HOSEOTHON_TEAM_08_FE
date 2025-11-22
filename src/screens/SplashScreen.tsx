@@ -10,19 +10,31 @@ import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Icon from '../components/Icon';
 import { Colors } from '../constants/colors';
+import { useAuth } from '../context/AuthContext';
 
 type NavigationProp = NativeStackNavigationProp<RootStackParamList>;
 
 export default function SplashScreen() {
   const navigation = useNavigation<NavigationProp>();
+  const { isLoading, isAuthenticated } = useAuth();
 
   useEffect(() => {
+    // 인증 상태 로딩이 완료될 때까지 대기
+    if (isLoading) {
+      return;
+    }
+
+    // 최소 1.5초는 스플래시 화면 표시
     const timer = setTimeout(() => {
-      navigation.replace('Main');
-    }, 2000);
+      if (isAuthenticated) {
+        navigation.replace('Main');
+      } else {
+        navigation.replace('Login');
+      }
+    }, 1500);
 
     return () => clearTimeout(timer);
-  }, [navigation]);
+  }, [navigation, isLoading, isAuthenticated]);
 
   return (
     <View style={styles.container}>

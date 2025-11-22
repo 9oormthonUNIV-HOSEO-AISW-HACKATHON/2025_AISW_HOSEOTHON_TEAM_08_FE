@@ -13,10 +13,12 @@ const api = axios.create({
 
 export interface LoginResponse {
   success: boolean;
+  message: string;
   user: {
     id: string;
     email: string;
     name: string;
+    generation?: string;
   };
   token: string;
 }
@@ -24,12 +26,14 @@ export interface LoginResponse {
 export const register = async (
   email: string,
   password: string,
-  name: string
+  name: string,
+  generation?: string
 ): Promise<LoginResponse> => {
   const response = await api.post<LoginResponse>('/auth/register', {
     email,
     password,
     name,
+    ...(generation && { generation }),
   });
   return response.data;
 };

@@ -105,6 +105,13 @@ export default function RoomScreen() {
     try {
       const recs = await getRoomRecommendations(roomId);
 
+      // API 응답이 배열이 아닌 경우 처리
+      if (!Array.isArray(recs)) {
+        console.warn('추천 응답이 배열 형식이 아닙니다:', recs);
+        setRecommendations([]);
+        return;
+      }
+
       // API 응답을 컴포넌트 형식에 맞게 변환
       const formattedRecs: Recommendation[] = recs.map((rec: any) => ({
         id: rec.id || `rec_${Date.now()}_${Math.random()}`,
@@ -122,8 +129,11 @@ export default function RoomScreen() {
       }));
 
       setRecommendations(formattedRecs);
-    } catch (error) {
+    } catch (error: any) {
       console.error('추천 로드 오류:', error);
+      if (error.response?.status === 500) {
+        console.warn('서버에서 추천을 생성하는 중 오류가 발생했습니다. 잠시 후 다시 시도해주세요.');
+      }
     } finally {
       setIsLoadingRecommendations(false);
     }
