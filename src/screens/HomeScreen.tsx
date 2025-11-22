@@ -1,4 +1,4 @@
-import React, { useState, useCallback } from 'react';
+import React, { useState, useCallback, useEffect } from 'react';
 import {
   View,
   Text,
@@ -6,9 +6,11 @@ import {
   ScrollView,
   TouchableOpacity,
   RefreshControl,
+  AppState,
+  AppStateStatus,
 } from 'react-native';
 import { SafeAreaView } from 'react-native-safe-area-context';
-import { useNavigation, useFocusEffect } from '@react-navigation/native';
+import { useNavigation, useFocusEffect, useIsFocused } from '@react-navigation/native';
 import { NativeStackNavigationProp } from '@react-navigation/native-stack';
 import { RootStackParamList } from '../navigation/AppNavigator';
 import Button from '../components/Button';
@@ -90,6 +92,14 @@ export default function HomeScreen() {
     }
   }, [user, logout, navigation]);
 
+  const isFocused = useIsFocused();
+
+  useEffect(() => {
+    if (user) {
+      loadRecommendations();
+    }
+  }, [user]);
+
   useFocusEffect(
     useCallback(() => {
       if (user) {
@@ -97,6 +107,28 @@ export default function HomeScreen() {
       }
     }, [user, loadRecommendations])
   );
+
+  useEffect(() => {
+    if (!isFocused || !user) return;
+
+    const unsubscribe = navigation.addListener('focus', () => {
+      loadRecommendations();
+    });
+
+    return unsubscribe;
+  }, [isFocused, user, loadRecommendations, navigation]);
+
+  useEffect(() => {
+    const subscription = AppState.addEventListener('change', (nextAppState: AppStateStatus) => {
+      if (nextAppState === 'active' && user && isFocused) {
+        loadRecommendations();
+      }
+    });
+
+    return () => {
+      subscription.remove();
+    };
+  }, [user, loadRecommendations, isFocused]);
 
   const onRefresh = async () => {
     setRefreshing(true);
